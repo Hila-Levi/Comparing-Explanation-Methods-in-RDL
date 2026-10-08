@@ -96,7 +96,7 @@ RelBench downloads datasets automatically on first use.
 
 Every script resolves paths relative to its own location, so it can be run from any directory. All scripts take `--dataset` and `--task`. Most also take `--model_type hgs|transformer` (default `hgs`), `--seed` (default `42`) and `--resume <run_index>`.
 
-### 1. (rel-arxiv only) Create a fixed test subset
+### 1. Create a test subset (for cases where the test is too large, e.g., rel-arxiv)
 
 The rel-arxiv test sets are too large to explain in full, so all explainers run on the same saved subset:
 
