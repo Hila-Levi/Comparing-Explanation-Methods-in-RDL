@@ -178,6 +178,44 @@ EvaluationMethods/<dataset>/<task>/<hgs|transformer>/run_N/
 
 Each new run gets the next free index (`run_1`, `run_2`, ...), so earlier results are never overwritten.
 
+## Example: pretrained models for rel-f1 / driver-position
+
+To make it possible to try the explainers without training a model first, the repository includes one example task folder, `rel-f1/`, with a trained HGS model and a trained RelGT model for the `driver-position` regression task (seed 42):
+
+```
+rel-f1/
+  data_f1/rel-f1_materialized_cache/   # materialized rel-f1 tables (the root_dir_name in train_config.py)
+  driver-position/
+    HGS/saved_model/                   # trained HGS model
+    transformer/saved_model/           # trained RelGT model
+```
+
+Each `saved_model/` folder holds the files written by the training script for run 1:
+
+| File | Contents |
+|---|---|
+| `model_weights_1.pt` | Weights of the best epoch (by validation MAE) |
+| `graph_data_1.pt` | The heterogeneous graph built from the database |
+| `dataset_1.pkl`, `task_1.pkl`, `col_stats_dict_1.pkl` | The RelBench dataset and task objects, and the column statistics used by the encoders |
+| `loader_config_1.json` | Neighbor sampling / RelGT loader settings |
+| `metadata_1.json` | Model hyperparameters and train / validation / test MAE |
+| `epoch_history_1.json` | Per-epoch training history |
+| `{train,val,test}_predictions_1.npy` | The model's predictions on each split |
+
+| Model | Best epoch | Val MAE | Test MAE |
+|---|---|---|---|
+| HGS (2 layers, 128 channels) | 19 | 2.90 | 3.87 |
+| RelGT (K = 100, 128 channels, 4 heads) | 33 | 3.00 | 6.24 |
+
+The paths in the config files already point to these folders, so the explainers and the evaluation pipeline can be run on them directly, skipping step 2 of [Usage](#usage):
+
+```bash
+python SingleColumnAblationExplainer/run_singleColumnAblation_explainer.py --dataset rel-f1 --task driver-position --model_type hgs --strategies fast
+python EvaluationMethods/run_evaluation_pipeline.py                        --dataset rel-f1 --task driver-position --model_type hgs
+```
+
+Use `--model_type transformer` for the RelGT model. Its neighbor-token cache (`transformer/relgt-cache/`) is not included in the repository; it is rebuilt automatically the first time the model is loaded. Intermediate training checkpoints (`checkpoints/run_N`) are also left out to keep the repository small.
+
 ## Reproducibility
 
 All scripts set `CUBLAS_WORKSPACE_CONFIG` and fix every random seed (`Utils.fix_randomness`). The data loaders are built deterministically (`Utils.create_consistent_loader`), so the same seed explains the same rows in the same order.
