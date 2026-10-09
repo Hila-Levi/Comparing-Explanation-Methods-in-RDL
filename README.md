@@ -207,14 +207,29 @@ Each `saved_model/` folder holds the files written by the training script for ru
 | HGS (2 layers, 128 channels) | 19 | 2.90 | 3.87 |
 | RelGT (K = 100, 128 channels, 4 heads) | 33 | 3.00 | 6.24 |
 
-The paths in the config files already point to these folders, so the explainers and the evaluation pipeline can be run on them directly, skipping step 2 of [Usage](#usage):
+The paths in the config files already point to these folders, so the explainers and the evaluation pipeline can be run on them directly, skipping step 2 of [Usage](#usage). In each explainer's config file, the `rel-f1` / `driver-position` entry points to the trained model through `saved_model_base_dir`. For example, in `SingleColumnAblationExplainer/singleColumnAblation_explainer_config.py`:
+
+```python
+"model_paths": {
+    "hgs": {
+        "saved_model_base_dir": "../rel-f1/driver-position/HGS/saved_model",
+        ...
+    },
+    "transformer": {
+        "saved_model_base_dir": "../rel-f1/driver-position/transformer/saved_model",
+        ...
+    },
+},
+```
+
+To explain a different trained model, change `saved_model_base_dir` in the config of every explainer you run, and `task_dir` in `EvaluationMethods/evaluation_pipeline_config.py`.
 
 ```bash
 python SingleColumnAblationExplainer/run_singleColumnAblation_explainer.py --dataset rel-f1 --task driver-position --model_type hgs --strategies fast
 python EvaluationMethods/run_evaluation_pipeline.py                        --dataset rel-f1 --task driver-position --model_type hgs
 ```
 
-Use `--model_type transformer` for the RelGT model. Its neighbor-token cache (`transformer/relgt-cache/`) is not included in the repository; it is rebuilt automatically the first time the model is loaded. Intermediate training checkpoints (`checkpoints/run_N`) are also left out to keep the repository small.
+Use `--model_type transformer` for the RelGT model. Its neighbor-token cache (`transformer/relgt-cache/`) is not included in the repository; it is rebuilt automatically the first time the model is loaded.
 
 ## Reproducibility
 
